@@ -23,7 +23,9 @@ const UserSchema = new mongoose.Schema({
     isVarified:{
         type:Boolean,
         default:false // email varification status 
-    }
+    },
+    isOtpVerified: { type: Boolean, default: false }
+
 });
 
 const User= mongoose.model("User",UserSchema);

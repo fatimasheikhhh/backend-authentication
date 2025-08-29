@@ -121,6 +121,102 @@ export async function login(req: Request,res:Response){
     }
 }
 
+// forget password 
+export async function forgetPassword(req: Request, res:Response){
+    try{
+        const {email} = req.body;
+        const user= await User.findOne({email});
+        if(!user){
+            return res.status(400).json({message:"User not found"});
+        }
+        const otp= generateOTP();
+        user.otp=otp;
+        user.otpExpiry= new Date(Date.now()+120*1000); // OTP expires in Two minute
+        await user.save();
+        await transporter.sendMail({
+            from:"fatimaqaswar101@gmail.com",
+            to:email,
+            subject:"Reset Password",
+            text:`Your reset password code is ${otp}`
+        });
+        res.json({message:"OTP sent successfully"});
+    }catch(err){
+        res.status(500).json({message:"Error sending OTP", err});
+    }
+}
+
+// verify Forget password OTP 
+export async function verifyForgetPasswordOTP(req: Request, res: Response){
+    try{
+        const { email, otp}= req.body;
+        const user= await User.findOne({email});
+        if(!user){
+            return res.status(400).json({message:"Invalid email or OTP"});
+        }
+        const isOtpExpired=(user.otpExpiry?.getTime()??0)<Date.now();
+        if(user.otp !== otp || isOtpExpired){
+            return res.status(400).json({message:"Invalid OTP or OTP expired"});
+        }
+        user.isOtpVerified= true;
+        await user.save();
+
+        res.json({message:"OTP verified successfully"});
+    }catch(err){
+        res.status(500).json({message: "Error verifying otp", err});
+    }
+}
+
+// resend forget password otp
+export async function resendForgetPasswordOtp(req:Request, res:Response){
+    try{
+        const {email}= req.body;
+        const user= await User.findOne({email});
+
+        if(!user){
+            return res.status(400).json({message: "User not found"});
+        }
+        const otp= generateOTP();
+        user.otp=otp;
+        user.otpExpiry= new Date(Date.now()+ 120*1000);
+        user.save();
+        await transporter.sendMail({
+            from:"fatimaqaswar101@gmail.com",
+            to: email,
+            subject:"Resend Password Reset OTP",
+            text:  `Your new password reset OTP is ${otp}`
+        })
+        res.json({message: "Password reset OTP sent successfully"});
+    }catch(err){
+        res.status(500).json({message:"Error resending OTP", err});
+    }
+}
+
+// set new password 
+
+export async function setNewPassword(req: Request,res:Response){
+    try{
+        const {email, newPassword}=req.body;
+        const user=await User.findOne({email});
+
+        if(!user){
+           return res.status(400).json({message:"User not found"});
+        }
+        if(!user?.isOtpVerified){
+            return res.status(400).json({message:"OTP not verified"});
+        }
+
+        user.password=newPassword;
+        user.otp=undefined;
+        user.otpExpiry= undefined;
+        user.isOtpVerified=false;
+        await user.save();
+
+        res.json({message:"Password updated successfully"});
+    }catch(err){
+        res.status(500).json({message:"Error updating password", err});
+    }
+}
+
 // logout User
 
 export async function logout(req: Request, res: Response){
