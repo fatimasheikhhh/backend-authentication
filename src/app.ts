@@ -3,6 +3,7 @@ import session from 'express-session';
 import dotenv from 'dotenv';
 import connectToDB from './utils/connectToDb.js';
 import authRouter from './routes/auth.routes.js';
+import employeeRoutes from './routes/employee.routes.js';
 
 dotenv.config();
 connectToDB();
@@ -33,6 +34,7 @@ app.use(
 );
 
 app.use('/api', authRouter);
+app.use("/api",employeeRoutes);
 
 const port = Number(process.env.PORT) || 3001;
 app.listen(port, () => {

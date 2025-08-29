@@ -24,7 +24,10 @@ const UserSchema = new mongoose.Schema({
         type:Boolean,
         default:false // email varification status 
     },
-    isOtpVerified: { type: Boolean, default: false }
+    isOtpVerified: { 
+        type: Boolean, 
+        default: false 
+    }
 
 });
 

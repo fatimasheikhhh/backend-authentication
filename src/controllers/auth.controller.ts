@@ -17,6 +17,8 @@ const transporter= nodemailer.createTransport({
 // Generate OTP function
 const generateOTP = ()=> crypto.randomInt(100000,999999).toString();
 
+// Register User
+
 export async function register(req: Request, res: Response) {
     try{
         const {name, email, password}=req.body;
