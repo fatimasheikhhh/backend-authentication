@@ -1,42 +1,21 @@
-import express, { type Application } from 'express';
-import session from 'express-session';
-import dotenv from 'dotenv';
-import connectToDB from './utils/connectToDb.js';
-import authRouter from './routes/auth.routes.js';
-import employeeRoutes from './routes/employee.routes.js';
-
-dotenv.config();
-connectToDB();
+import express, { type Application } from "express";
+import router from "./routes/index.js";
+import cors, { CorsOptions } from "cors";
+import connectToDB from "./config/db/connectToDb.js";
 
 const app: Application = express();
 
-// In production behind a proxy (e.g., Render/Heroku), enable trust proxy for secure cookies
-if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1);
-}
+connectToDB();
 
-// Parse JSON bodies
+const corsOptions: CorsOptions = {
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+
 app.use(express.json());
+app.use("/api/v1", router);
 
-// Session middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'dev_secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      // Only send secure cookies in production; allow HTTP in dev to avoid issues
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours in milliseconds
-    }
-  })
-);
-
-app.use('/api', authRouter);
-app.use("/api",employeeRoutes);
-
-const port = Number(process.env.PORT) || 3001;
-app.listen(port, () => {
-  console.log(`server is running on ${port}`);
-});
+export default app;
