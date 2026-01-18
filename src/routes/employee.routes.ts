@@ -1,12 +1,31 @@
-import express, {type Router } from "express";
-import { createNewEmployee, deleteEmployee, getAllEmployee, getEmployeeById, updateEmployee } from "../controllers/employee.controller.js";
+import { Router } from "express";
+import {
+  createNewEmployee,
+  deleteEmployee,
+  getAllEmployee,
+  getEmployeeById,
+  updateEmployee,
+} from "../controllers/employee.controller.js";
+import { protect } from "../middleware/authMiddleware.js";
+import { validate } from "../middleware/validate.js";
+import { employeeSchema, updateEmployeeSchema } from "../utils/validation.js";
 
-const employeeRoutes: Router= express.Router();
+const employeeRouter = Router();
 
-employeeRoutes.get("/employees",getAllEmployee);
-employeeRoutes.get("/employees/:id",getEmployeeById);
-employeeRoutes.post("/employee/create",createNewEmployee);
-employeeRoutes.put("/employee/update/:id",updateEmployee);
-employeeRoutes.delete("/employees/:id",deleteEmployee);
+employeeRouter.post(
+  "/create",
+  protect,
+  validate(employeeSchema),
+  createNewEmployee
+);
+employeeRouter.get("/", protect, getAllEmployee);
+employeeRouter.get("/:id", protect, getEmployeeById);
+employeeRouter.put(
+  "/update/:id",
+  protect,
+  validate(updateEmployeeSchema),
+  updateEmployee
+);
+employeeRouter.delete("/:id", protect, deleteEmployee);
 
-export default employeeRoutes;
+export default employeeRouter;
